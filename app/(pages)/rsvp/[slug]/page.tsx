@@ -3,11 +3,13 @@ import DynamicRSVPForm from "@/app/components/DynamicRSVPForm";
 import { notFound } from "next/navigation";
 
 interface RSVPPageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>; // Changed: params is now a Promise
 }
 
 export default async function RSVPPage({ params }: RSVPPageProps) {
-  const { success, data: event } = await getEventBySlug(params.slug);
+  const { slug } = await params; // Added: await the params Promise
+  
+  const { success, data: event } = await getEventBySlug(slug); // Changed: use extracted slug
 
   if (!success || !event) {
     notFound();

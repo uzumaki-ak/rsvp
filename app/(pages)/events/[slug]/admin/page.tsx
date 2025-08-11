@@ -1,4 +1,3 @@
-
 import { getEventBySlug, getEventRSVPs } from "@/app/actions/getEvent";
 import { RSVPTable } from "@/app/components/RSVPTable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,11 +7,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 interface EventAdminPageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>; // Changed: params is now a Promise
 }
 
 export default async function EventAdminPage({ params }: EventAdminPageProps) {
-  const { success: eventSuccess, data: event } = await getEventBySlug(params.slug);
+  const { slug } = await params; // Added: await the params Promise
+  
+  const { success: eventSuccess, data: event } = await getEventBySlug(slug);
   
   if (!eventSuccess || !event) {
     notFound();
