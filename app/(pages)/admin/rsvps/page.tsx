@@ -34,15 +34,12 @@
 
 
 // import { getRSVPs } from "@/app/actions/getRSVPs";
-// import { signOut } from "@/app/actions/auth";
-"use client"
 import { signOut } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { RSVPTable } from "@/app/components/RSVPTable";
 import { House } from "lucide-react";
 import Link from "next/link";
 import { getRSVPs } from "@/app/actions/getRSVPs";
-// import { getRSVPs } from "@/app/actions/getRSVPS";
 
 export default async function RSVPsPage() {
   const { success, data, message } = await getRSVPs();

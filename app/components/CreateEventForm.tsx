@@ -25,7 +25,7 @@
 
 //   const handleSubmit = async (e: React.FormEvent) => {
 //     e.preventDefault();
-    
+
 //     // Validation
 //     const newErrors: Record<string, string> = {};
 //     if (!title.trim()) newErrors.title = "Event title is required";
@@ -34,7 +34,7 @@
 //     if (!location.trim()) newErrors.location = "Location is required";
 //     if (!creatorName.trim()) newErrors.creatorName = "Your name is required";
 //     if (!creatorEmail.trim()) newErrors.creatorEmail = "Your email is required";
-    
+
 //     if (Object.keys(newErrors).length > 0) {
 //       setErrors(newErrors);
 //       return;
@@ -56,9 +56,9 @@
 //         title: "Event Created Successfully!",
 //         description: "Your RSVP event has been created. Share the link with your guests!",
 //       });
-      
+
 //       setCreatedEvent({ slug: result.slug, title: result.title });
-      
+
 //       // Reset form
 //       setTitle("");
 //       setDescription("");
@@ -102,7 +102,7 @@
 
 //   if (createdEvent) {
 //     const shareableUrl = `${window.location.origin}/rsvp/${createdEvent.slug}`;
-    
+
 //     return (
 //       <div className="max-w-2xl mx-auto my-10 p-6">
 //         <Card className="bg-green-50 border-green-200">
@@ -116,12 +116,12 @@
 //             <div className="bg-white p-4 rounded-lg border">
 //               <Label className="text-sm font-medium text-gray-700">Shareable Link:</Label>
 //               <div className="flex items-center gap-2 mt-2">
-//                 <Input 
-//                   value={shareableUrl} 
-//                   readOnly 
+//                 <Input
+//                   value={shareableUrl}
+//                   readOnly
 //                   className="font-mono text-sm"
 //                 />
-//                 <Button 
+//                 <Button
 //                   onClick={() => copyToClipboard(shareableUrl)}
 //                   variant="outline"
 //                 >
@@ -130,13 +130,13 @@
 //               </div>
 //             </div>
 //             <div className="flex gap-2">
-//               <Button 
+//               <Button
 //                 onClick={() => window.open(shareableUrl, '_blank')}
 //                 className="flex-1"
 //               >
 //                 Preview Event
 //               </Button>
-//               <Button 
+//               <Button
 //                 onClick={() => setCreatedEvent(null)}
 //                 variant="outline"
 //                 className="flex-1"
@@ -290,8 +290,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
 import { createEvent } from "@/app/actions/createEvent";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { CalendarDays, MapPin, Mail, User, FileText } from "lucide-react";
+
+interface CreateEventResult {
+  success: boolean;
+  slug?: string;
+  title?: string;
+  adminUrl?: string;
+  message?: string;
+}
 
 export default function CreateEventForm() {
   const [title, setTitle] = useState("");
@@ -302,13 +316,16 @@ export default function CreateEventForm() {
   const [creatorEmail, setCreatorEmail] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [createdEvent, setCreatedEvent] = useState<{slug: string, title: string, adminUrl: string} | null>(null);
+  const [createdEvent, setCreatedEvent] = useState<{
+    slug: string;
+    title: string;
+    adminUrl: string;
+  } | null>(null);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validation
+
     const newErrors: Record<string, string> = {};
     if (!title.trim()) newErrors.title = "Event title is required";
     if (!description.trim()) newErrors.description = "Description is required";
@@ -316,7 +333,7 @@ export default function CreateEventForm() {
     if (!location.trim()) newErrors.location = "Location is required";
     if (!creatorName.trim()) newErrors.creatorName = "Your name is required";
     if (!creatorEmail.trim()) newErrors.creatorEmail = "Your email is required";
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -325,23 +342,26 @@ export default function CreateEventForm() {
     const formData = new FormData();
     formData.append("title", title);
     formData.append("description", description);
-    formData.append("eventDate", eventDate!.toISOString().split('T')[0]);
+    formData.append("eventDate", eventDate!.toISOString().split("T")[0]);
     formData.append("location", location);
     formData.append("creatorName", creatorName);
     formData.append("creatorEmail", creatorEmail);
 
     setIsLoading(true);
-    const result = await createEvent(formData);
+    const result = (await createEvent(formData)) as CreateEventResult;
 
-    if (result.success) {
+    if (result.success && result.slug && result.title && result.adminUrl) {
       toast({
         title: "Event Created Successfully!",
         description: "Check your email for the admin and share links!",
       });
-      
-      setCreatedEvent({ slug: result.slug, title: result.title, adminUrl: result.adminUrl });
-      
-      // Reset form
+
+      setCreatedEvent({
+        slug: result.slug,
+        title: result.title,
+        adminUrl: result.adminUrl,
+      });
+
       setTitle("");
       setDescription("");
       setEventDate(undefined);
@@ -352,7 +372,7 @@ export default function CreateEventForm() {
     } else {
       toast({
         title: "Error",
-        description: result.message,
+        description: result.message || "Something went wrong",
         variant: "destructive",
       });
     }
@@ -366,14 +386,13 @@ export default function CreateEventForm() {
         title: "Copied!",
         description: "Link copied to clipboard",
       });
-    } catch (err) {
-      // Fallback for older browsers
+    } catch {
       const textArea = document.createElement("textarea");
       textArea.value = text;
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
-      document.execCommand('copy');
+      document.execCommand("copy");
       document.body.removeChild(textArea);
       toast({
         title: "Copied!",
@@ -384,26 +403,30 @@ export default function CreateEventForm() {
 
   if (createdEvent) {
     const shareableUrl = `${window.location.origin}/rsvp/${createdEvent.slug}`;
-    
+
     return (
       <div className="max-w-2xl mx-auto my-10 p-6">
         <Card className="bg-green-50 border-green-200">
           <CardHeader className="text-center">
-            <CardTitle className="text-green-800">🎉 Event Created Successfully!</CardTitle>
+            <CardTitle className="text-green-800">
+              🎉 Event Created Successfully!
+            </CardTitle>
             <CardDescription className="text-green-600">
-              Your RSVP event "{createdEvent.title}" is ready to share
+              Your RSVP event &quot;{createdEvent.title}&quot; is ready to share
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="bg-white p-4 rounded-lg border">
-              <Label className="text-sm font-medium text-gray-700">Share this link with guests:</Label>
+              <Label className="text-sm font-medium text-gray-700">
+                Share this link with guests:
+              </Label>
               <div className="flex items-center gap-2 mt-2">
-                <Input 
-                  value={shareableUrl} 
-                  readOnly 
+                <Input
+                  value={shareableUrl}
+                  readOnly
                   className="font-mono text-sm"
                 />
-                <Button 
+                <Button
                   onClick={() => copyToClipboard(shareableUrl)}
                   variant="outline"
                 >
@@ -411,16 +434,18 @@ export default function CreateEventForm() {
                 </Button>
               </div>
             </div>
-            
+
             <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-              <Label className="text-sm font-medium text-orange-700">Admin link (keep private):</Label>
+              <Label className="text-sm font-medium text-orange-700">
+                Admin link (keep private):
+              </Label>
               <div className="flex items-center gap-2 mt-2">
-                <Input 
-                  value={createdEvent.adminUrl} 
-                  readOnly 
+                <Input
+                  value={createdEvent.adminUrl}
+                  readOnly
                   className="font-mono text-xs text-orange-800"
                 />
-                <Button 
+                <Button
                   onClick={() => copyToClipboard(createdEvent.adminUrl)}
                   variant="outline"
                   size="sm"
@@ -434,13 +459,13 @@ export default function CreateEventForm() {
             </div>
 
             <div className="flex gap-2">
-              <Button 
-                onClick={() => window.open(shareableUrl, '_blank')}
+              <Button
+                onClick={() => window.open(shareableUrl, "_blank")}
                 className="flex-1"
               >
                 Preview Event
               </Button>
-              <Button 
+              <Button
                 onClick={() => setCreatedEvent(null)}
                 variant="outline"
                 className="flex-1"
@@ -496,7 +521,9 @@ export default function CreateEventForm() {
                 rows={3}
               />
               {errors.description && (
-                <p className="text-red-500 text-sm mt-1">{errors.description}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.description}
+                </p>
               )}
             </div>
 
@@ -508,7 +535,7 @@ export default function CreateEventForm() {
               <Calendar
                 mode="single"
                 selected={eventDate}
-                onSelect={setEventDate}
+                onSelect={(date) => setEventDate(date ?? undefined)}
                 className="rounded-md border mt-1"
                 disabled={(date) => date < new Date()}
               />
@@ -536,7 +563,10 @@ export default function CreateEventForm() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="creatorName" className="flex items-center gap-2">
+                <Label
+                  htmlFor="creatorName"
+                  className="flex items-center gap-2"
+                >
                   <User className="h-4 w-4" />
                   Your Name
                 </Label>
@@ -548,12 +578,17 @@ export default function CreateEventForm() {
                   className="mt-1"
                 />
                 {errors.creatorName && (
-                  <p className="text-red-500 text-sm mt-1">{errors.creatorName}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.creatorName}
+                  </p>
                 )}
               </div>
 
               <div>
-                <Label htmlFor="creatorEmail" className="flex items-center gap-2">
+                <Label
+                  htmlFor="creatorEmail"
+                  className="flex items-center gap-2"
+                >
                   <Mail className="h-4 w-4" />
                   Your Email
                 </Label>
@@ -565,9 +600,13 @@ export default function CreateEventForm() {
                   placeholder="you@example.com"
                   className="mt-1"
                 />
-                <p className="text-sm text-gray-500 mt-1">You'll receive RSVP notifications here</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  <p>You&apos;ll receive RSVP notifications here</p>
+                </p>
                 {errors.creatorEmail && (
-                  <p className="text-red-500 text-sm mt-1">{errors.creatorEmail}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.creatorEmail}
+                  </p>
                 )}
               </div>
             </div>
