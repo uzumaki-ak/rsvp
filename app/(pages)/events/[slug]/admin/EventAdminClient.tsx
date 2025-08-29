@@ -1,3 +1,126 @@
+// "use client";
+
+// import { RSVPTable } from "@/app/components/RSVPTable";
+// import {
+//   Card,
+//   CardContent,
+//   CardDescription,
+//   CardHeader,
+//   CardTitle,
+// } from "@/components/ui/card";
+// import { Button } from "@/components/ui/button";
+// import {
+//   CalendarDays,
+//   MapPin,
+//   Users,
+//   Share2,
+//   CalendarHeart,
+// } from "lucide-react";
+// import Link from "next/link";
+
+// interface EventAdminClientProps {
+//   event: {
+//     title: string;
+//     description: string;
+//     event_date: string | Date;
+//     event_location: string;
+//     creator_name: string;
+//     slug: string;
+//   };
+//   rsvpData: any[]; // Replace 'any' with a more specific type if available
+//   attendingCount: number;
+//   totalGuests: number;
+//   shareableUrl: string;
+// }
+
+// export default function EventAdminClient({
+//   event,
+//   rsvpData,
+//   attendingCount,
+//   totalGuests,
+//   shareableUrl,
+// }: EventAdminClientProps) {
+//   return (
+//     <div className="container mx-auto mt-8 p-4 max-w-6xl">
+//       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+//         <Card className="lg:col-span-2">
+//           <CardHeader>
+//             <CardTitle className="flex items-center gap-2">
+//               <CalendarDays className="h-5 w-5" />
+//               {event.title}
+//             </CardTitle>
+//             <CardDescription>{event.description}</CardDescription>
+//           </CardHeader>
+//           <CardContent className="space-y-4">
+//             <div className="flex items-center gap-2 text-sm">
+//               <CalendarHeart className="h-4 w-4 text-gray-500" />
+//               {new Date(event.event_date).toLocaleDateString("en-US", {
+//                 weekday: "long",
+//                 year: "numeric",
+//                 month: "long",
+//                 day: "numeric",
+//               })}
+//             </div>
+//             <div className="flex items-center gap-2 text-sm">
+//               <MapPin className="h-4 w-4 text-gray-500" />
+//               {event.event_location}
+//             </div>
+//             <div className="flex items-center gap-2 text-sm">
+//               <Users className="h-4 w-4 text-gray-500" />
+//               Organized by {event.creator_name}
+//             </div>
+//           </CardContent>
+//         </Card>
+
+//         <Card>
+//           <CardHeader>
+//             <CardTitle className="text-lg">Event Stats</CardTitle>
+//           </CardHeader>
+//           <CardContent className="space-y-4">
+//             <div className="text-center">
+//               <div className="text-3xl font-bold text-green-600">
+//                 {attendingCount}
+//               </div>
+//               <div className="text-sm text-gray-500">People Attending</div>
+//             </div>
+//             <div className="text-center">
+//               <div className="text-3xl font-bold text-blue-600">
+//                 {totalGuests}
+//               </div>
+//               <div className="text-sm text-gray-500">Total Guests</div>
+//             </div>
+//             <div className="pt-4 space-y-2">
+//               <Button
+//                 onClick={() => navigator.clipboard.writeText(shareableUrl)}
+//                 className="w-full mb-2"
+//                 variant="outline"
+//               >
+//                 <Share2 className="h-4 w-4 mr-2" />
+//                 Copy Share Link
+//               </Button>
+//               <Link href={`/rsvp/${event.slug}`}>
+//                 <Button className="w-full">View RSVP Page</Button>
+//               </Link>
+//             </div>
+//           </CardContent>
+//         </Card>
+//       </div>
+
+//       <Card>
+//         <CardHeader>
+//           <CardTitle>RSVP Responses</CardTitle>
+//           <CardDescription>All responses for {event.title}</CardDescription>
+//         </CardHeader>
+//         <CardContent>
+//           <RSVPTable data={rsvpData || []} />
+//         </CardContent>
+//       </Card>
+//     </div>
+//   );
+// }
+
+
+//
 "use client";
 
 import { RSVPTable } from "@/app/components/RSVPTable";
@@ -18,6 +141,17 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+// ✅ Define RSVP type
+interface RSVP {
+  id: string;
+  name: string;
+  email: string;
+  accompany: number;
+  attendance: "yes" | "no" | "maybe";
+  created_at: string;
+  event_id: string;
+}
+
 interface EventAdminClientProps {
   event: {
     title: string;
@@ -27,7 +161,7 @@ interface EventAdminClientProps {
     creator_name: string;
     slug: string;
   };
-  rsvpData: any[]; // Replace 'any' with a more specific type if available
+  rsvpData: RSVP[]; // ✅ no more `any`
   attendingCount: number;
   totalGuests: number;
   shareableUrl: string;

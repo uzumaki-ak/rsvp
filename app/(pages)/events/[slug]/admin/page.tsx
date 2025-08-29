@@ -111,35 +111,95 @@
 
 //
 
-import { getEventBySlug, getEventRSVPs } from "@/app/actions/getEvent";
+// import { getEventBySlug, getEventRSVPs } from "@/app/actions/getEvent";
 
+// import { notFound } from "next/navigation";
+// import EventAdminClient from "./EventAdminClient";
+
+// interface EventAdminPageProps {
+//   params: { slug: string }; 
+// }
+
+// export default async function EventAdminPage({ params }: EventAdminPageProps) {
+//   const { slug } = params;
+
+//   const { success: eventSuccess, data: event } = await getEventBySlug(slug);
+//   if (!eventSuccess || !event) {
+//     notFound();
+//   }
+
+//   const { success: rsvpSuccess, data: rsvps } = await getEventRSVPs(event.id);
+//   const rsvpData: any[] = rsvpSuccess && Array.isArray(rsvps) ? rsvps : [];
+
+//   const attendingCount = rsvpData?.filter(rsvp => rsvp.attendance === 'yes').length || 0;
+//   const totalGuests =
+//     rsvpData?.reduce(
+//       (sum, rsvp) =>
+//         sum + (rsvp.attendance === "yes" ? (rsvp.accompany || 0) + 1 : 0),
+//       0
+//     ) || 0;
+
+//   const shareableUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/rsvp/${event.slug}`;
+
+//   return (
+//     <EventAdminClient
+//       event={event}
+//       rsvpData={rsvpData}
+//       attendingCount={attendingCount}
+//       totalGuests={totalGuests}
+//       shareableUrl={shareableUrl}
+//     />
+//   );
+// }
+
+
+///
+import { getEventBySlug, getEventRSVPs } from "@/app/actions/getEvent";
 import { notFound } from "next/navigation";
 import EventAdminClient from "./EventAdminClient";
 
+interface RSVP {
+  id: string;
+  name: string;
+  email: string;
+  accompany: number;
+  attendance: "yes" | "no" | "maybe";
+  created_at: string;
+  event_id: string;
+}
+
 interface EventAdminPageProps {
-  params: { slug: string }; 
+  params: Promise<{ slug: string }>;
 }
 
 export default async function EventAdminPage({ params }: EventAdminPageProps) {
-  const { slug } = params;
+  // ✅ need to await params
+  const { slug } = await params;
 
+  // fetch event
   const { success: eventSuccess, data: event } = await getEventBySlug(slug);
   if (!eventSuccess || !event) {
     notFound();
   }
 
+  // fetch RSVPs
   const { success: rsvpSuccess, data: rsvps } = await getEventRSVPs(event.id);
-  const rsvpData: any[] = rsvpSuccess && Array.isArray(rsvps) ? rsvps : [];
+  const rsvpData: RSVP[] = rsvpSuccess && Array.isArray(rsvps) ? rsvps : [];
 
-  const attendingCount = rsvpData?.filter(rsvp => rsvp.attendance === 'yes').length || 0;
+  // calculate stats
+  const attendingCount =
+    rsvpData.filter((rsvp) => rsvp.attendance === "yes").length || 0;
+
   const totalGuests =
-    rsvpData?.reduce(
+    rsvpData.reduce(
       (sum, rsvp) =>
         sum + (rsvp.attendance === "yes" ? (rsvp.accompany || 0) + 1 : 0),
       0
     ) || 0;
 
-  const shareableUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/rsvp/${event.slug}`;
+  const shareableUrl = `${
+    process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+  }/rsvp/${event.slug}`;
 
   return (
     <EventAdminClient
