@@ -537,8 +537,13 @@ export default function CreateEventForm() {
                 selected={eventDate}
                 onSelect={(date) => setEventDate(date ?? undefined)}
                 className="rounded-md border mt-1"
-                disabled={(date) => date < new Date()}
+                disabled={(date) => {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0); // reset to midnight
+                  return date < today; // now today is allowed
+                }}
               />
+
               {errors.eventDate && (
                 <p className="text-red-500 text-sm mt-1">{errors.eventDate}</p>
               )}
@@ -601,8 +606,9 @@ export default function CreateEventForm() {
                   className="mt-1"
                 />
                 <p className="text-sm text-gray-500 mt-1">
-                  <p>You&apos;ll receive RSVP notifications here</p>
+                  <span>You&apos;ll receive RSVP notifications here</span>
                 </p>
+
                 {errors.creatorEmail && (
                   <p className="text-red-500 text-sm mt-1">
                     {errors.creatorEmail}
