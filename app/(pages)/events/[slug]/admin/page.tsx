@@ -13,18 +13,18 @@
 
 // export default async function EventAdminPage({ params }: EventAdminPageProps) {
 //   const { slug } = await params; // Added: await the params Promise
-  
+
 //   const { success: eventSuccess, data: event } = await getEventBySlug(slug);
-  
+
 //   if (!eventSuccess || !event) {
 //     notFound();
 //   }
 
 //   const { success: rsvpSuccess, data: rsvps } = await getEventRSVPs(event.id);
-  
+
 //   const rsvpData = rsvpSuccess ? rsvps : [];
 //   const attendingCount = rsvpData?.filter(rsvp => rsvp.attendance === 'yes').length || 0;
-//   const totalGuests = rsvpData?.reduce((sum, rsvp) => 
+//   const totalGuests = rsvpData?.reduce((sum, rsvp) =>
 //     sum + (rsvp.attendance === 'yes' ? (rsvp.accompany || 0) + 1 : 0), 0) || 0;
 
 //   const shareableUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/rsvp/${event.slug}`;
@@ -43,11 +43,11 @@
 //           <CardContent className="space-y-4">
 //             <div className="flex items-center gap-2 text-sm">
 //               <CalendarDays className="h-4 w-4 text-gray-500" />
-//               {new Date(event.event_date).toLocaleDateString('en-US', { 
-//                 weekday: 'long', 
-//                 year: 'numeric', 
-//                 month: 'long', 
-//                 day: 'numeric' 
+//               {new Date(event.event_date).toLocaleDateString('en-US', {
+//                 weekday: 'long',
+//                 year: 'numeric',
+//                 month: 'long',
+//                 day: 'numeric'
 //               })}
 //             </div>
 //             <div className="flex items-center gap-2 text-sm">
@@ -75,7 +75,7 @@
 //               <div className="text-sm text-gray-500">Total Guests</div>
 //             </div>
 //             <div className="pt-4 space-y-2">
-//               <Button 
+//               <Button
 //                 onClick={() => navigator.clipboard.writeText(shareableUrl)}
 //                 className="w-full"
 //                 variant="outline"
@@ -108,7 +108,6 @@
 //   );
 // }
 
-
 //
 
 // import { getEventBySlug, getEventRSVPs } from "@/app/actions/getEvent";
@@ -117,7 +116,7 @@
 // import EventAdminClient from "./EventAdminClient";
 
 // interface EventAdminPageProps {
-//   params: { slug: string }; 
+//   params: { slug: string };
 // }
 
 // export default async function EventAdminPage({ params }: EventAdminPageProps) {
@@ -152,12 +151,12 @@
 //   );
 // }
 
-
 ///
 import { getEventBySlug, getEventRSVPs } from "@/app/actions/getEvent";
 import { notFound } from "next/navigation";
 import EventAdminClient from "./EventAdminClient";
 
+// Match this interface with your actual data structure
 interface RSVP {
   id: string;
   name: string;
@@ -168,22 +167,45 @@ interface RSVP {
   event_id: string;
 }
 
+interface Event {
+  id: string;
+  title: string;
+  description: string;
+  event_date: string | Date;
+  event_location: string;
+  creator_name: string;
+  creator_email: string;
+  slug: string;
+  created_at: string;
+}
+
 interface EventAdminPageProps {
   params: Promise<{ slug: string }>;
 }
 
 export default async function EventAdminPage({ params }: EventAdminPageProps) {
-  // ✅ need to await params
   const { slug } = await params;
 
   // fetch event
-  const { success: eventSuccess, data: event } = await getEventBySlug(slug);
+  const { success: eventSuccess, data: event } = (await getEventBySlug(
+    slug
+  )) as {
+    success: boolean;
+    data: Event;
+  };
+
   if (!eventSuccess || !event) {
     notFound();
   }
 
   // fetch RSVPs
-  const { success: rsvpSuccess, data: rsvps } = await getEventRSVPs(event.id);
+  const { success: rsvpSuccess, data: rsvps } = (await getEventRSVPs(
+    event.id
+  )) as {
+    success: boolean;
+    data: RSVP[];
+  };
+
   const rsvpData: RSVP[] = rsvpSuccess && Array.isArray(rsvps) ? rsvps : [];
 
   // calculate stats
