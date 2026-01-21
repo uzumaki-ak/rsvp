@@ -1,29 +1,17 @@
-
 import { signOut } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
-import { RSVPTable } from "@/app/components/RSVPTable";
 import {
   House,
-  Users,
-  
   PlusCircle,
   LayoutDashboard,
   CalendarDays,
+  Calendar,
 } from "lucide-react";
 import Link from "next/link";
-import { getRSVPs } from "@/app/actions/getRSVPs";
+import { getAllEvents } from "@/app/actions/getEvent";
 import ThemeToggle from "@/app/components/ThemeToggle";
 import { createClient } from "@/app/utils/supabase/server";
-
-interface RSVP {
-  id: string;
-  name: string;
-  email: string;
-  accompany: number;
-  attendance: string;
-  created_at: string;
-  event_id: string;
-}
+import EventsTable from "./EventsTable";
 
 export default async function RSVPsPage() {
   const supabase = await createClient();
@@ -49,11 +37,7 @@ export default async function RSVPsPage() {
     );
   }
 
-  const { success, data, message } = (await getRSVPs()) as {
-    success: boolean;
-    data: RSVP[];
-    message?: string;
-  };
+  const { success, data: events, message } = await getAllEvents();
 
   if (!success) {
     return (
@@ -71,15 +55,16 @@ export default async function RSVPsPage() {
     );
   }
 
-  // Calculate stats
-  const totalRSVPs = data?.length || 0;
-  const attendingCount =
-    data?.filter((rsvp) => rsvp.attendance === "yes").length || 0;
-  const maybeCount =
-    data?.filter((rsvp) => rsvp.attendance === "maybe").length || 0;
-  // const noCount = data?.filter((rsvp) => rsvp.attendance === "no").length || 0;
-  const totalGuests =
-    data?.reduce((sum, rsvp) => sum + (rsvp.accompany || 0) + 1, 0) || 0;
+  // Calculate overall stats
+  const totalEvents = events?.length || 0;
+  const totalResponses = events?.reduce((sum, e) => sum + (e.stats?.totalResponses || 0), 0) || 0;
+  const totalAttending = events?.reduce((sum, e) => sum + (e.stats?.attending || 0), 0) || 0;
+  const totalMaybe = events?.reduce((sum, e) => sum + (e.stats?.maybe || 0), 0) || 0;
+
+  // Sort events by created_at descending (newest first)
+  const sortedEvents = events?.sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  ) || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-stone-50 dark:from-gray-900 dark:via-gray-900 dark:to-stone-900 transition-colors duration-300">
@@ -88,14 +73,14 @@ export default async function RSVPsPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-              <Users className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+              <Calendar className="h-6 w-6 text-amber-600 dark:text-amber-400" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-stone-800 dark:text-stone-200">
                 Admin Dashboard
               </h1>
               <p className="text-sm text-stone-600 dark:text-stone-400">
-                Manage all your event responses
+                Manage all your events and responses
               </p>
             </div>
           </div>
@@ -104,7 +89,7 @@ export default async function RSVPsPage() {
             <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700">
               <div className="h-2 w-2 rounded-full bg-green-500"></div>
               <span className="text-sm text-stone-700 dark:text-stone-300">
-                {totalRSVPs} Total Responses
+                {totalEvents} Events
               </span>
             </div>
 
@@ -146,7 +131,7 @@ export default async function RSVPsPage() {
             className="px-4 py-3 font-medium text-amber-600 dark:text-amber-400 border-b-2 border-amber-600 dark:border-amber-400"
           >
             <LayoutDashboard className="h-4 w-4 inline mr-2" />
-            All RSVPs
+            All Events
           </Link>
           <Link
             href="/create"
@@ -157,11 +142,20 @@ export default async function RSVPsPage() {
           </Link>
         </div>
 
-        {/* Stats Cards */}
+        {/* Overall Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4">
             <div className="text-2xl font-bold text-stone-900 dark:text-white mb-1">
-              {totalRSVPs}
+              {totalEvents}
+            </div>
+            <div className="text-sm text-stone-600 dark:text-stone-400">
+              Total Events
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4">
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+              {totalResponses}
             </div>
             <div className="text-sm text-stone-600 dark:text-stone-400">
               Total Responses
@@ -170,45 +164,31 @@ export default async function RSVPsPage() {
 
           <div className="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4">
             <div className="text-2xl font-bold text-green-600 dark:text-green-400 mb-1">
-              {attendingCount}
+              {totalAttending}
             </div>
             <div className="text-sm text-stone-600 dark:text-stone-400">
-              Attending
+              Total Attending
             </div>
           </div>
 
           <div className="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4">
             <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mb-1">
-              {maybeCount}
+              {totalMaybe}
             </div>
             <div className="text-sm text-stone-600 dark:text-stone-400">
               Maybe
             </div>
           </div>
-
-          <div className="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4">
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
-              {totalGuests}
-            </div>
-            <div className="text-sm text-stone-600 dark:text-stone-400">
-              Total Guests
-            </div>
-          </div>
         </div>
 
-        {/* RSVP Table */}
-        <div className="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 shadow-sm overflow-hidden">
-          <div className="p-6">
-            <RSVPTable data={data || []} />
-          </div>
-        </div>
-
-        {/* Footer Note */}
-        <div className="mt-8 text-center text-sm text-stone-500 dark:text-stone-400">
-          <p>
-            All RSVP data is stored securely and can be exported at any time.
-          </p>
-        </div>
+        {/* Events Table Component */}
+        <EventsTable 
+          events={sortedEvents}
+          totalEvents={totalEvents}
+          totalResponses={totalResponses}
+          totalAttending={totalAttending}
+          totalMaybe={totalMaybe}
+        />
       </div>
     </div>
   );

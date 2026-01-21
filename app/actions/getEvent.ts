@@ -41,6 +41,53 @@
 
 import { createClient } from "../utils/supabase/server";
 
+
+
+
+export async function getAllEvents() {
+  const supabase = await createClient();
+
+  const { data: events, error: eventsError } = await supabase
+    .from("events")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (eventsError) {
+    console.error("Error fetching events:", eventsError);
+    return { success: false, message: "Failed to fetch events" };
+  }
+
+  const eventsWithStats = await Promise.all(
+    events.map(async (event) => {
+      const { data: rsvps } = await supabase
+        .from("rsvps")
+        .select("*")
+        .eq("event_id", event.id);
+
+      const attending = rsvps?.filter((r) => r.attendance === "yes").length || 0;
+      const maybe = rsvps?.filter((r) => r.attendance === "maybe").length || 0;
+      const notAttending = rsvps?.filter((r) => r.attendance === "no").length || 0;
+      const totalResponses = rsvps?.length || 0;
+
+      return {
+        ...event,
+        stats: {
+          attending,
+          maybe,
+          notAttending,
+          totalResponses,
+        },
+      };
+    })
+  );
+
+  return { success: true, data: eventsWithStats };
+}
+
+
+
+
+
 export async function getEventBySlug(slug: string) {
   const supabase = await createClient();
 
