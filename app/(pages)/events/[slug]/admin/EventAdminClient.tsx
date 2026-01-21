@@ -504,7 +504,7 @@ export default function EventAdminClient({
               Contact support for assistance
             </p>
             <a
-              href="mailto:support@rsvpmanager.com"
+              href="mailto:anikeshuzumaki@gmail.com"
               className="inline-flex items-center text-sm text-amber-600 dark:text-amber-400 hover:underline"
             >
               Contact Support

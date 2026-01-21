@@ -84,7 +84,7 @@ export default function Footer() {
             </Link>
             
             <a 
-              href="mailto:support@rsvpmanager.com" 
+              href="mailto:anikeshuzumaki@gmail.com" 
               className="text-amber-400 hover:text-amber-300 font-medium"
             >
               Contact
