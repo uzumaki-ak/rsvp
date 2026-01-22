@@ -7,6 +7,7 @@
 
 ---
 
+## demo link: https://youtu.be/CQheZDy8PII
 ## 📖 Introduction
 
 RSVP is a modern web application built with Next.js 16, Tailwind CSS 3, and Supabase, designed for managing event invitations, RSVPs, and administrative oversight. The platform enables event organizers to create events, share RSVP links, and monitor responses in real-time. It also supports user authentication for event admins, allowing secure access to RSVP data and event management features.
